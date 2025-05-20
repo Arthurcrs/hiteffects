@@ -35,7 +35,7 @@ public class ModConfig {
 
     @SubscribeEvent
     public void onCfgChange(ConfigChangedEvent.OnConfigChangedEvent evt) {
-        if (evt.getModID().equals(HitEffectMod.MODID)) sync();
+        if (evt.getModID().equals(HitEffectsMod.MODID)) sync();
     }
 
     private static void sync() {
@@ -75,14 +75,14 @@ public class ModConfig {
         for (String line : raw) {
             String[] parts = line.replace(" ", "").split(",");
             if (parts.length != 3) {
-            	LogManager.getLogger().warn("Skipping bad entry, it should be <id>,<durationTicks>,<level>", HitEffectMod.MODID);
+            	LogManager.getLogger().warn("Skipping bad entry, it should be <id>,<durationTicks>,<level>", HitEffectsMod.MODID);
             	continue;
             }
 
             Potion pot = ForgeRegistries.POTIONS.getValue(
                              new ResourceLocation(parts[0]));
             if (pot == null) {
-            	LogManager.getLogger().warn("Skipping bad entry, potion effect should not be null", HitEffectMod.MODID);
+            	LogManager.getLogger().warn("Skipping bad entry, potion effect should not be null", HitEffectsMod.MODID);
             	continue;
             }
 

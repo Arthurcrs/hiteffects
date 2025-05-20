@@ -1,7 +1,7 @@
 [
 {
-  "modid": "ondamageeffect",
-  "name": "On-Damage Effect",
+  "modid": "hiteffects",
+  "name": "Hit Effects",
   "description": "Applies configurable potion effects to the player whenever they harm or are harmed by another entity.",
   "mcversion": "1.12.2",
   "authorList": ["Mahghuuuls"]
