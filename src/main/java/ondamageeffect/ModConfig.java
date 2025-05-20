@@ -1,6 +1,7 @@
 package ondamageeffect;
 
 import net.minecraftforge.common.config.Configuration;
+
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
@@ -14,7 +15,11 @@ public class ModConfig {
 
     public static Potion EFFECT;
     public static int    DURATION;
-    public static int    AMPLIFIER;
+    public static int    LEVEL;
+    public static boolean ENABLE_ON_DAMAGE_TAKEN;
+    public static boolean ENABLE_ON_DAMAGE_DONE;
+    public static boolean ENABLE_WITH_FALL_DAMAGE;
+    
 
     static void load(File file) {
         cfg = new Configuration(file);
@@ -27,14 +32,20 @@ public class ModConfig {
     }
 
     private static void sync() {
-        final String cat = "hit_effect";
-        String  rl = cfg.get(cat, "effect", "minecraft:speed").getString();
-        int  dur  = cfg.get(cat, "duration", 200).getInt();
-        int  amp  = cfg.get(cat, "amplifier", 0).getInt();
-
-        EFFECT    = ForgeRegistries.POTIONS.getValue(new ResourceLocation(rl));
-        DURATION  = dur;
-        AMPLIFIER = amp;
+    	boolean enableWithFallDamage = cfg.getBoolean("enableWithFallDamage", "General", false, "Apply damage taken effects when the player takes fall damage?");
+    	boolean enableOnDamageTaken = cfg.getBoolean("enableOnDamageTaken", "General", true, "Apply effects when the player takes damage?");
+    	boolean enableOnDamageDone = cfg.getBoolean("enableOnDamageDone", "General", true, "Apply effects when the player deals damage?");
+    	
+        String  effectId = cfg.get("effect", "Id", "").getString();
+        int  duration  = cfg.get("effect", "Duration in ticks", 200).getInt();
+        int  level  = cfg.get("effect", "Level", 1).getInt() - 1;
+        
+        EFFECT    = ForgeRegistries.POTIONS.getValue(new ResourceLocation(effectId));
+        DURATION  = duration;
+        LEVEL = level;
+        ENABLE_ON_DAMAGE_TAKEN = enableOnDamageTaken;
+        ENABLE_ON_DAMAGE_DONE = enableOnDamageDone;
+        ENABLE_WITH_FALL_DAMAGE = enableWithFallDamage;
 
         if (cfg.hasChanged()) cfg.save();
     }
