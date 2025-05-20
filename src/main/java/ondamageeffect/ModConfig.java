@@ -16,7 +16,7 @@ import java.util.List;
 public class ModConfig {
 
     private static final String CAT_GENERAL = "general";
-    private static final String CAT_EFFECT  = "effect";
+    private static final String CAT_EFFECT  = "effects";
     private static final String CAT_MODULES  = "modules";
 
     public static boolean ENABLE_ON_DAMAGE_TAKEN;
@@ -24,7 +24,8 @@ public class ModConfig {
     public static boolean ENABLE_FALL_DAMAGE;
     public static boolean ONLY_HOSTILE_TARGETS;
     public static boolean ENABLE_PLAYER_TARGETS;
-    public static List<PotionEffect> EFFECT_LIST = new ArrayList<>();
+    public static List<PotionEffect> ON_TAKING_DAMAGE_EFFECT_LIST = new ArrayList<>();
+    public static List<PotionEffect> ON_DEALING_DAMAGE_EFFECT_LIST = new ArrayList<>();
 
     private static Configuration cfg;
 
@@ -61,41 +62,54 @@ public class ModConfig {
                 "If true, damaging another player also triggers the effect");
 
         boolean useSeconds      = cfg.getBoolean("useSeconds",
-                CAT_GENERAL, true,
+        		CAT_GENERAL, true,
                 "If true, the duration value is interpreted as seconds (converted to ticks by multiplying by 20)");
 
-        String[] raw = cfg.getStringList(
-                "effects",
+        String[] onTakingDamageEffectList = cfg.getStringList(
+                "effectsOnTakingDamage",
                 CAT_EFFECT,
                 new String[]{""},
-                "List of potion effects in the form <id>,<durationTicks>,<level>");
+                "List of potion effects applied to the player when damage is taken <id>,<duration>,<level>");
         
-        EFFECT_LIST.clear();
-
-        for (String line : raw) {
-            String[] parts = line.replace(" ", "").split(",");
-            if (parts.length != 3) {
-            	LogManager.getLogger().warn("Skipping bad entry, it should be <id>,<durationTicks>,<level>", HitEffectsMod.MODID);
-            	continue;
-            }
-
-            Potion pot = ForgeRegistries.POTIONS.getValue(
-                             new ResourceLocation(parts[0]));
-            if (pot == null) {
-            	LogManager.getLogger().warn("Skipping bad entry, potion effect should not be null", HitEffectsMod.MODID);
-            	continue;
-            }
-
-            try {
-                int durRaw = Integer.parseInt(parts[1]);
-                int amplifier = Integer.parseInt(parts[2]);
-                int dur = useSeconds ? durRaw * 20 : durRaw;
-                if (dur > 0 && amplifier >= 0)
-                    EFFECT_LIST.add(new PotionEffect(pot, dur, amplifier - 1));
-            } catch (NumberFormatException ignored) { }
-        }
+        String[] onDealingDamageEffectList = cfg.getStringList(
+                "effectsOnDealingDamage",
+                CAT_EFFECT,
+                new String[]{""},
+                "List of potion effects applied to the player when damage is dealt <id>,<duration>,<level>");
         
+        ON_TAKING_DAMAGE_EFFECT_LIST = parseEffectList(onTakingDamageEffectList, useSeconds);
+        ON_DEALING_DAMAGE_EFFECT_LIST= parseEffectList(onDealingDamageEffectList, useSeconds);
 
         if (cfg.hasChanged()) cfg.save();
     }
+    
+    private static List<PotionEffect> parseEffectList(String[] raw, boolean useSeconds) {
+        List<PotionEffect> out = new ArrayList<>();
+
+        for (String line : raw) {
+            String[] p = line.replace(" ", "").split(",");
+            if (p.length != 3) {
+                LogManager.getLogger().warn("[{}] bad entry '{}'; expected <id>,<dur>,<lvl>",
+                                             HitEffectsMod.MODID, line);
+                continue;
+            }
+
+            Potion pot = ForgeRegistries.POTIONS.getValue(new ResourceLocation(p[0]));
+            if (pot == null) {
+                LogManager.getLogger().warn("[{}] unknown potion '{}'", HitEffectsMod.MODID, p[0]);
+                continue;
+            }
+
+            try {
+                int dur  = Integer.parseInt(p[1]);
+                int amplifier  = Integer.parseInt(p[2]) - 1;
+                dur = useSeconds ? dur * 20 : dur;
+
+                if (dur > 0 && amplifier >= 0)
+                    out.add(new PotionEffect(pot, dur, amplifier));
+            } catch (NumberFormatException ignored) { }
+        }
+        return out;
+    }
+    
 }

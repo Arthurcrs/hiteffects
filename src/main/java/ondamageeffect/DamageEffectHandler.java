@@ -1,5 +1,7 @@
 package ondamageeffect;
 
+import java.util.List;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.monster.IMob;
@@ -23,7 +25,7 @@ public class DamageEffectHandler {
         EntityPlayer player = (EntityPlayer) evt.getEntityLiving();
         if (player.world.isRemote) return;
 
-        applyEffects(player);
+        applyEffects(player, ModConfig.ON_TAKING_DAMAGE_EFFECT_LIST);
     }
 
     @SubscribeEvent
@@ -47,14 +49,13 @@ public class DamageEffectHandler {
         EntityPlayer attacker = (EntityPlayer) trueSrc;
         if (attacker.world.isRemote) return;
 
-        applyEffects(attacker);
+        applyEffects(attacker, ModConfig.ON_DEALING_DAMAGE_EFFECT_LIST);
     }
 
-    private void applyEffects(EntityPlayer player) {
-        if (ModConfig.EFFECT_LIST.isEmpty()) return;
+    private void applyEffects(EntityPlayer player, List<PotionEffect> effectList) {
+        if (effectList.isEmpty()) return;
 
-        for (PotionEffect pe : ModConfig.EFFECT_LIST) {
-            player.removePotionEffect(pe.getPotion());
+        for (PotionEffect pe : effectList) {
             player.addPotionEffect(new PotionEffect(
                     pe.getPotion(), pe.getDuration(), pe.getAmplifier()));
         }
