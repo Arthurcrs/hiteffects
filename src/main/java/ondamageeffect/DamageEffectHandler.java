@@ -12,52 +12,62 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class DamageEffectHandler {
 
-    @SubscribeEvent
-    public void onPlayerHurt(LivingHurtEvent evt) {
-        if (!ModConfig.ENABLE_ON_DAMAGE_TAKEN) return;
-        if (!(evt.getEntityLiving() instanceof EntityPlayer)) return;
+	@SubscribeEvent
+	public void onPlayerHurt(LivingHurtEvent evt) {
+		if (!ModConfig.ENABLE_ON_DAMAGE_TAKEN)
+			return;
+		if (!(evt.getEntityLiving() instanceof EntityPlayer))
+			return;
 
-        DamageSource src = evt.getSource();
-        if (!ModConfig.ENABLE_FALL_DAMAGE &&
-            (src == DamageSource.FALL || src == DamageSource.OUT_OF_WORLD))
-            return;
-        
-        EntityPlayer player = (EntityPlayer) evt.getEntityLiving();
-        if (player.world.isRemote) return;
+		DamageSource src = evt.getSource();
 
-        applyEffects(player, ModConfig.ON_TAKING_DAMAGE_EFFECT_LIST);
-    }
+		if (!ModConfig.ENABLE_FALL_DAMAGE && (src == DamageSource.FALL || src == DamageSource.OUT_OF_WORLD))
+			return;
 
-    @SubscribeEvent
-    public void onPlayerDealsDamage(LivingHurtEvent evt) {
-        if (!ModConfig.ENABLE_ON_DAMAGE_DONE) return;
+		Entity trueSrc = src.getTrueSource();
 
-        Entity trueSrc = evt.getSource().getTrueSource();
-        if (!(trueSrc instanceof EntityPlayer)) return;
+		if (trueSrc instanceof EntityPlayer && !ModConfig.ENABLE_TAKEN_FROM_PLAYER)
+			return;
 
-        Entity victim = evt.getEntityLiving();
+		EntityPlayer player = (EntityPlayer) evt.getEntityLiving();
+		if (player.world.isRemote)
+			return;
 
-        if (ModConfig.ONLY_HOSTILE_TARGETS) {
-            boolean victimIsHostile = victim instanceof IMob;
-            boolean victimIsPlayer  = victim instanceof EntityPlayer;
+		applyEffects(player, ModConfig.ON_TAKING_DAMAGE_EFFECT_LIST);
+	}
 
-            if (!victimIsHostile &&
-                !(ModConfig.ENABLE_PLAYER_TARGETS && victimIsPlayer))
-                return;
-        }
+	@SubscribeEvent
+	public void onPlayerDealsDamage(LivingHurtEvent evt) {
+		if (!ModConfig.ENABLE_ON_DAMAGE_DONE)
+			return;
 
-        EntityPlayer attacker = (EntityPlayer) trueSrc;
-        if (attacker.world.isRemote) return;
+		Entity trueSrc = evt.getSource().getTrueSource();
+		if (!(trueSrc instanceof EntityPlayer))
+			return;
 
-        applyEffects(attacker, ModConfig.ON_DEALING_DAMAGE_EFFECT_LIST);
-    }
+		Entity victim = evt.getEntityLiving();
 
-    private void applyEffects(EntityPlayer player, List<PotionEffect> effectList) {
-        if (effectList.isEmpty()) return;
+		if (ModConfig.ONLY_HOSTILE_TARGETS) {
+			boolean victimIsHostile = victim instanceof IMob;
+			boolean victimIsPlayer = victim instanceof EntityPlayer;
 
-        for (PotionEffect pe : effectList) {
-            player.addPotionEffect(new PotionEffect(
-                    pe.getPotion(), pe.getDuration(), pe.getAmplifier()));
-        }
-    }
+			if (!victimIsHostile && !(ModConfig.ENABLE_PLAYER_TARGETS && victimIsPlayer))
+				return;
+		}
+
+		EntityPlayer attacker = (EntityPlayer) trueSrc;
+		if (attacker.world.isRemote)
+			return;
+
+		applyEffects(attacker, ModConfig.ON_DEALING_DAMAGE_EFFECT_LIST);
+	}
+
+	private void applyEffects(EntityPlayer player, List<PotionEffect> effectList) {
+		if (effectList.isEmpty())
+			return;
+
+		for (PotionEffect pe : effectList) {
+			player.addPotionEffect(new PotionEffect(pe.getPotion(), pe.getDuration(), pe.getAmplifier()));
+		}
+	}
 }
